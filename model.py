@@ -8,17 +8,17 @@ class DynamicTransformer(nn.Module):
         super().__init__()
         
         # Extraction des gènes
-        self.d_model = config_genes['d_model']
-        self.n_heads = config_genes['n_heads']
-        self.n_layers = config_genes['n_layers']
-        ratio = config_genes['dim_feedforward_ratio']
+        self.d_model = config_genes['d_model'] # Dimension du modèle
+        self.n_heads = config_genes['n_heads'] # Nombre de têtes d'attention
+        self.n_layers = config_genes['n_layers'] # Nombre de couches Transformer
+        ratio = config_genes['dim_feedforward_ratio'] # Ratio pour la dimension feedforward
         self.dim_feedforward = self.d_model * ratio
 
         # Embedding (Projection simple pour l'exemple)
         # Pour du texte réel, ce serait nn.Embedding
         self.embedding = nn.Linear(input_dim, self.d_model)
         
-        # Le coeur du Transformer
+        # Le coeur du Transformer - Encoder
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=self.d_model,
             nhead=self.n_heads,
@@ -34,8 +34,6 @@ class DynamicTransformer(nn.Module):
     def forward(self, x):
         # x shape: [batch, seq_len, input_dim]
         x = self.embedding(x)
-        
-        # Positional Encoding simplifié (optionnel pour ce test rapide)
         
         # Passage dans le Transformer
         x = self.transformer(x)

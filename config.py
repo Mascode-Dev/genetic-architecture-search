@@ -11,12 +11,12 @@ SEARCH_SPACE = {
 
 # --- PARAMÈTRES GÉNÉTIQUES ---
 POPULATION_SIZE = 10        # Nombre de modèles par génération
-NUM_GENERATIONS = 5         # Nombre de cycles d'évolution
+NUM_GENERATIONS = 10         # Nombre de cycles d'évolution
 MUTATION_RATE = 0.2         # 20% de chance de mutation
 TOURNAMENT_SIZE = 3         # Pour la sélection des parents
 
 # --- CONTRAINTES & ENTRAÎNEMENT ---
 MAX_PARAMS = 1_000_000      # Limite stricte : 1 Million de paramètres
-DEVICE = "cpu"              # Mettre "cuda" si tu as un GPU NVIDIA
-EPOCHS_PER_EVAL = 1         # On entraîne peu (proxy) juste pour voir si ça apprend
+DEVICE = "cuda"              # Mettre "cuda" si tu as un GPU NVIDIA
+EPOCHS_PER_EVAL = 15
 BATCH_SIZE = 32

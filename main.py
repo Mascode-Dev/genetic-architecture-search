@@ -19,13 +19,13 @@ def evaluate_individual(ind):
     # 2. Vérification Taille
     ind.n_params = model.count_parameters()
     if ind.n_params > MAX_PARAMS:
-        print(f" ❌ Trop gros ({ind.n_params/1e6:.2f}M params)")
+        print(f"Trop gros ({ind.n_params/1e6:.2f}M params)")
         ind.accuracy = 0.0
-        ind.fitness = -1.0 # Pénalité mortelle
+        ind.fitness = -1.0 # Pénalité mortelle, modèle rejeté
         return
 
-    # 3. Mini-Entraînement (Proxy Task)
-    # Données bidons pour tester l'algo rapidement
+    # Mini-Entraînement (Proxy Task)
+    # Dans le contexte du projet nous utilisons un dataset fictif en générant aléatoirement des données.
     inputs = torch.randn(BATCH_SIZE, 20, 10).to(DEVICE) # Batch, Seq, Dim
     targets = torch.randint(0, 2, (BATCH_SIZE,)).to(DEVICE)
     
@@ -33,7 +33,7 @@ def evaluate_individual(ind):
     criterion = nn.CrossEntropyLoss()
     
     model.train()
-    for _ in range(EPOCHS_PER_EVAL): # Boucle d'entraînement courte
+    for _ in range(EPOCHS_PER_EVAL):
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, targets)
@@ -45,25 +45,29 @@ def evaluate_individual(ind):
     ind.accuracy = 1.0 / (loss.item() + 1e-5) # Plus loss est basse, mieux c'est
     
     # Fitness = Précision pondérée par la taille (optionnel)
-    ind.fitness = ind.accuracy 
+
+    alpha = 0.1 
+    size_ratio = ind.n_params / MAX_PARAMS
+
+    ind.fitness = ind.accuracy - (alpha * size_ratio)
     
-    print(f" ✅ Score: {ind.fitness:.4f} | Params: {ind.n_params}")
+    print(f"Score: {ind.fitness:.4f} | Params: {ind.n_params}")
 
 # --- BOUCLE PRINCIPALE ---
 def main():
-    print(f"🧬 Lancement de l'Algo Génétique sur {NUM_GENERATIONS} générations...")
+    print(f"Lancement de l'Algo Génétique sur {NUM_GENERATIONS} générations...")
     
-    # 1. Initialisation
+    # Initialisation
     population = [Individual() for _ in range(POPULATION_SIZE)]
     
     for gen in range(NUM_GENERATIONS):
         print(f"\n--- GÉNÉRATION {gen + 1}/{NUM_GENERATIONS} ---")
         
-        # 2. Évaluation
+        # Évaluation
         for ind in population:
             evaluate_individual(ind)
             
-        # 3. Tri (Les meilleurs en premier)
+        # Tri (Les meilleurs en premier)
         population.sort(key=lambda x: x.fitness, reverse=True)
         best = population[0]
         print(f"🏆 Meilleur de Gen {gen+1}: {best.genes} (Fit: {best.fitness:.4f})")
@@ -73,12 +77,20 @@ def main():
             break
             
         # 4. Sélection & Reproduction
-        next_gen = [best] # Élitisme : on garde le meilleur tel quel
+        next_gen = [best] # Élitisme
         
         while len(next_gen) < POPULATION_SIZE:
+
+            
+            def tournament_selection(pop, k):
+                # Sélectionne k individus au hasard de la population
+                candidates = random.choices(pop, k=k) 
+                # Retourne le meilleur des candidats (celui avec le fitness le plus élevé)
+                return max(candidates, key=lambda x: x.fitness)
+            
             # Tournoi simple
-            parent1 = random.choice(population[:5]) # On prend parmi le top 50%
-            parent2 = random.choice(population[:5])
+            parent1 = tournament_selection(population, TOURNAMENT_SIZE) # Sélection du premier parent
+            parent2 = tournament_selection(population, TOURNAMENT_SIZE)
             
             # Croisement
             child = Individual.crossover(parent1, parent2)
@@ -89,7 +101,7 @@ def main():
             
         population = next_gen
 
-    print("\n🏁 RECHERCHE TERMINÉE.")
+    print("\nRECHERCHE TERMINÉE.")
     print(f"Architecture gagnante : {population[0].genes}")
     print(f"Paramètres : {population[0].n_params}")
 
