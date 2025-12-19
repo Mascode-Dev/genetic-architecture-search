@@ -52,8 +52,11 @@ def evaluate_individual(ind):
     ind.fitness = ind.accuracy - (alpha * size_ratio)
     
     print(f"Score: {ind.fitness:.4f} | Params: {ind.n_params}")
+    score.append(ind.fitness)
 
-# --- BOUCLE PRINCIPALE ---
+# --- MAIN LOOP ---
+
+score = [] # Store all scores for analysis
 def main():
     print(f"Lancement de l'Algo Génétique sur {NUM_GENERATIONS} générations...")
     
@@ -104,6 +107,18 @@ def main():
     print("\nRECHERCHE TERMINÉE.")
     print(f"Architecture gagnante : {population[0].genes}")
     print(f"Paramètres : {population[0].n_params}")
+
+    # Display a line plot of scores over generations
+    try:
+        import matplotlib.pyplot as plt
+
+        plt.plot(score)
+        plt.title("Scores des individus au fil des évaluations")
+        plt.xlabel("Évaluations")
+        plt.ylabel("Score de fitness")
+        plt.show()
+    except ImportError:
+        print("matplotlib n'est pas installé, le graphique des scores ne peut pas être affiché.")
 
 if __name__ == "__main__":
     main()

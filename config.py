@@ -1,22 +1,20 @@
 ﻿# config.py
-
-# --- ESPACE DE RECHERCHE (Gènes possibles) ---
-# Le modèle piochera une valeur dans chaque liste
+# Search spaces (possible values for the genes)
 SEARCH_SPACE = {
-    "n_layers": [1, 2, 4, 6],           # Profondeur du réseau
-    "n_heads": [2, 4, 8],               # Têtes d'attention
-    "d_model": [64, 128, 256],          # Taille des vecteurs (largeur)
-    "dim_feedforward_ratio": [1, 2, 4]  # Facteur d'expansion du MLP
+    "n_layers": [1, 2, 4, 6], # Networks Depth
+    "n_heads": [2, 4, 8], # Attention heads
+    "d_model": [64, 128, 256], # Vectors length
+    "dim_feedforward_ratio": [1, 2, 4] # MLP Growing Factor
 }
 
-# --- PARAMÈTRES GÉNÉTIQUES ---
-POPULATION_SIZE = 10        # Nombre de modèles par génération
-NUM_GENERATIONS = 10         # Nombre de cycles d'évolution
-MUTATION_RATE = 0.2         # 20% de chance de mutation
-TOURNAMENT_SIZE = 3         # Pour la sélection des parents
+# Genetic Parameters
+POPULATION_SIZE = 30  # Number of models per generation
+NUM_GENERATIONS = 75  # Number of evolution cycles
+MUTATION_RATE = 0.15  # Mutation probability
+TOURNAMENT_SIZE = 4 # Size of tournament for parents selection
 
-# --- CONTRAINTES & ENTRAÎNEMENT ---
-MAX_PARAMS = 1_000_000      # Limite stricte : 1 Million de paramètres
-DEVICE = "cuda"              # Mettre "cuda" si tu as un GPU NVIDIA
-EPOCHS_PER_EVAL = 15
-BATCH_SIZE = 32
+# Constaints & Training
+MAX_PARAMS = 1_000_000 # Number of parameters - 1M by default to take a cheap cost model
+DEVICE = "cuda" # Type of device GPU or CPU
+EPOCHS_PER_EVAL = 10 # Number of iteration per evaluation
+BATCH_SIZE = 32 # Batch size

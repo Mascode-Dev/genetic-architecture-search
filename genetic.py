@@ -10,7 +10,7 @@ class Individual:
         self.n_params = 0
 
     def _random_genes(self):
-        """Génère un génome aléatoire valide."""
+        """Generate random genes."""
         genes = {}
         for key, choices in SEARCH_SPACE.items():
             genes[key] = random.choice(choices)
@@ -18,24 +18,24 @@ class Individual:
         return genes
 
     def _fix_constraints(self, genes):
-        """Assure que d_model est divisible par n_heads (obligatoire pour PyTorch)."""
+        """Ensure d_model is divisible by n_heads (required for PyTorch)."""
         while genes['d_model'] % genes['n_heads'] != 0:
-            # Soit on change les têtes, soit le modèle. Ici on change les têtes.
+            # Either change the heads or the model. Here we change the heads.
             genes['n_heads'] = random.choice(SEARCH_SPACE['n_heads'])
 
     def mutate(self):
-        """Change aléatoirement un gène."""
+        """Randomly change a gene."""
         if random.random() < MUTATION_RATE:
             gene_key = random.choice(list(SEARCH_SPACE.keys()))
             self.genes[gene_key] = random.choice(SEARCH_SPACE[gene_key])
-            self._fix_constraints(self.genes) # Réparer si on a cassé la divisibilité
-
+            self._fix_constraints(self.genes) # Fix if divisibility is broken
+            
     @staticmethod
     def crossover(parent1, parent2):
-        """Mélange deux parents."""
+        """Mix two parents."""
         child_genes = {}
         for key in SEARCH_SPACE.keys():
-            # 50% chance de prendre le gène du père ou de la mère
+            # 50% chance to take the gene from the father or the mother
             child_genes[key] = random.choice([parent1.genes[key], parent2.genes[key]])
         
         child = Individual(genes=child_genes)
