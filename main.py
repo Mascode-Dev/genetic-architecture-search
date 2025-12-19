@@ -7,25 +7,25 @@ from config import *
 from genetic import Individual
 from model import DynamicTransformer
 
-# --- FONCTION D'ÉVALUATION (FITNESS) ---
+# --- FITNESS FUNCTION ---
 def evaluate_individual(ind):
-    """Construit, entraîne et évalue un individu."""
-    print(f"   > Évaluation: {ind.genes}...", end="")
+    """Builds, trains, and evaluates an individual."""
+    print(f"   > Evaluation: {ind.genes}...", end="")
     
-    # 1. Création du modèle
-    # Pour l'exemple : Input dim 10, Seq len 20, Output 2 classes
+    # Model Construction
+    # e.g. : Input dim 10, Seq len 20, Output 2 classes
     model = DynamicTransformer(input_dim=10, output_dim=2, config_genes=ind.genes).to(DEVICE)
     
-    # 2. Vérification Taille
+    # Length Calculation
     ind.n_params = model.count_parameters()
     if ind.n_params > MAX_PARAMS:
-        print(f"Trop gros ({ind.n_params/1e6:.2f}M params)")
+        print(f"Too large ({ind.n_params/1e6:.2f}M params)")
         ind.accuracy = 0.0
-        ind.fitness = -1.0 # Pénalité mortelle, modèle rejeté
+        ind.fitness = -1.0 # Penalty for too large models - model rejected
         return
 
-    # Mini-Entraînement (Proxy Task)
-    # Dans le contexte du projet nous utilisons un dataset fictif en générant aléatoirement des données.
+    # Training Loop (Simplified for demonstration)
+    # We are using a fake dataset here for illustration purposes
     inputs = torch.randn(BATCH_SIZE, 20, 10).to(DEVICE) # Batch, Seq, Dim
     targets = torch.randint(0, 2, (BATCH_SIZE,)).to(DEVICE)
     
@@ -34,17 +34,16 @@ def evaluate_individual(ind):
     
     model.train()
     for _ in range(EPOCHS_PER_EVAL):
-        optimizer.zero_grad()
-        outputs = model(inputs)
+        optimizer.zero_grad() # Reset gradients
+        outputs = model(inputs) # Forward pass
         loss = criterion(outputs, targets)
-        loss.backward()
-        optimizer.step()
+        loss.backward() # Backpropagation
+        optimizer.step() # Update weights
         
-    # 4. Score (Ici on utilise la Loss inverse comme précision simplifiée pour l'exemple)
-    # Dans un vrai cas, on ferait un validation loop
-    ind.accuracy = 1.0 / (loss.item() + 1e-5) # Plus loss est basse, mieux c'est
+    # Accuracy (Here we use the inverse Loss as a simplified accuracy for the example)
+    ind.accuracy = 1.0 / (loss.item() + 1e-5) # Lower loss is better
     
-    # Fitness = Précision pondérée par la taille (optionnel)
+    # Fitness = Accuracy weighted by size
 
     alpha = 0.1 
     size_ratio = ind.n_params / MAX_PARAMS
@@ -58,44 +57,44 @@ def evaluate_individual(ind):
 
 score = [] # Store all scores for analysis
 def main():
-    print(f"Lancement de l'Algo Génétique sur {NUM_GENERATIONS} générations...")
+    print(f"Launching Genetic Algorithm for {NUM_GENERATIONS} generations...")
     
-    # Initialisation
+    # Initialization
     population = [Individual() for _ in range(POPULATION_SIZE)]
     
     for gen in range(NUM_GENERATIONS):
-        print(f"\n--- GÉNÉRATION {gen + 1}/{NUM_GENERATIONS} ---")
+        print(f"\n--- GENERATION {gen + 1}/{NUM_GENERATIONS} ---")
         
-        # Évaluation
+        # Evaluation
         for ind in population:
             evaluate_individual(ind)
             
-        # Tri (Les meilleurs en premier)
+        # Sorting (Best first)
         population.sort(key=lambda x: x.fitness, reverse=True)
         best = population[0]
-        print(f"🏆 Meilleur de Gen {gen+1}: {best.genes} (Fit: {best.fitness:.4f})")
+        print(f"🏆 Best of Gen {gen+1}: {best.genes} (Fit: {best.fitness:.4f})")
         
-        # Si c'est la dernière génération, on s'arrête
+        # If it's the last generation, stop here
         if gen == NUM_GENERATIONS - 1:
             break
             
-        # 4. Sélection & Reproduction
-        next_gen = [best] # Élitisme
+        # 4. SSelection & Reproduction
+        next_gen = [best] # Elitism
         
         while len(next_gen) < POPULATION_SIZE:
 
             
             def tournament_selection(pop, k):
-                # Sélectionne k individus au hasard de la population
+                # Select k individuals randomly from the population
                 candidates = random.choices(pop, k=k) 
-                # Retourne le meilleur des candidats (celui avec le fitness le plus élevé)
+                # Return the best candidate (the one with the highest fitness)
                 return max(candidates, key=lambda x: x.fitness)
             
-            # Tournoi simple
-            parent1 = tournament_selection(population, TOURNAMENT_SIZE) # Sélection du premier parent
+            # Simple tournament
+            parent1 = tournament_selection(population, TOURNAMENT_SIZE) # SSelect first parent
             parent2 = tournament_selection(population, TOURNAMENT_SIZE)
             
-            # Croisement
+            # Crossover
             child = Individual.crossover(parent1, parent2)
             
             # Mutation
@@ -104,21 +103,21 @@ def main():
             
         population = next_gen
 
-    print("\nRECHERCHE TERMINÉE.")
-    print(f"Architecture gagnante : {population[0].genes}")
-    print(f"Paramètres : {population[0].n_params}")
+    print("\nSEARCH COMPLETED.")
+    print(f"Winning architecture: {population[0].genes}")
+    print(f"Parameters: {population[0].n_params}")
 
     # Display a line plot of scores over generations
     try:
         import matplotlib.pyplot as plt
 
         plt.plot(score)
-        plt.title("Scores des individus au fil des évaluations")
-        plt.xlabel("Évaluations")
-        plt.ylabel("Score de fitness")
+        plt.title("Scores of individuals over evaluations")
+        plt.xlabel("Evaluations")
+        plt.ylabel("Fitness score")
         plt.show()
     except ImportError:
-        print("matplotlib n'est pas installé, le graphique des scores ne peut pas être affiché.")
+        print("matplotlib is not installed, the score plot cannot be displayed.")
 
 if __name__ == "__main__":
     main()
